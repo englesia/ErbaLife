@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ErbaLife__Online_Fitness_Koçluğu_Platformu.Data.Repositories;
+using ErbaLife__Online_Fitness_Koçluğu_Platformu.Data.Repositories.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebApplication2.Models;
 
@@ -8,9 +10,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))); // PostgreSQL kullanımı
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    ////options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 2;
+    ////   options.Password.RequireNonAlphanumeric = false;
+    //options.Password.RequireLowercase = true;
+    //options.Password.RequireUppercase = true;
+    //options.Password.RequiredUniqueChars = 1;
+    //options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    //options.Lockout.MaxFailedAccessAttempts = 5;
+    //options.User.RequireUniqueEmail = true;
+})
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IUserRepository, ApplicationUserRepository>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -36,42 +51,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllerRoute(
-        name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}");
-    endpoints.MapRazorPages();
-});
-
-// Veri başlatma işlemlerini yapın
-await SeedData.Initialize(app.Services);
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
 
 app.Run();
-
-// SeedData sınıfını tanımlayın
-public static class SeedData
-{
-    public static async Task Initialize(IServiceProvider serviceProvider)
-    {
-        using (var serviceScope = serviceProvider.CreateScope())
-        {
-            var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-            // Veritabanını başlatma işlemleri
-            if (context.AspNetUsers.Any())
-            {
-                return;
-            }
-
-            var user = new ApplicationUser { UserName = "admin", Email = "admin@example.com" };
-            var result = await userManager.CreateAsync(user, "Password123!");
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(user, "Admin");
-            }
-        }
-    }
-}

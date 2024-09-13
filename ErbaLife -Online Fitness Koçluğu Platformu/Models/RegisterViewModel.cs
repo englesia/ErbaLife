@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http; // IFormFile için gerekli
 
 namespace WebApplication2.Models
 {
@@ -26,6 +28,10 @@ namespace WebApplication2.Models
         [Required]
         public string Gender { get; set; }
 
-        public string ProfilePictureUrl { get; set; }
+        // Fotoğraf URL'si veritabanında saklanacak
+        public string ? ProfilePictureUrl { get; set; }
+
+        // Fotoğraf dosyası yükleme için
+        public IFormFile ? ProfilePicture { get; set; }
     }
 }
